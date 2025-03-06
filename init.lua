@@ -190,6 +190,19 @@ vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right win
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
+vim.api.nvim_set_keymap('n', '<leader>w', '<C-w>', { noremap = true, silent = true, desc = 'Window' })
+
+-- [F]ile
+vim.keymap.set('n', '<leader>fs', ':w<CR>', { noremap = true, silent = true, desc = 'Save file' })
+-- vim.keymap.set('n', '<leader>fr', builtin, { noremap = true, silent = true, desc = 'Find recent file' })
+--
+-- [B]uffer
+vim.keymap.set('n', '<leader>b[', ':bprev<CR>', { noremap = true, silent = true, desc = 'previous buffer' })
+vim.keymap.set('n', '<leader>b]', ':bnext<CR>', { noremap = true, silent = true, desc = 'next buffer' })
+
+-- Insert Mode modification
+-- vim.keymap.set('i', '<C-BS>', '<C-w>', { desc = 'delete previous word' })
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
@@ -317,9 +330,34 @@ require('lazy').setup({
         { '<leader>d', group = '[D]ocument' },
         { '<leader>r', group = '[R]ename' },
         { '<leader>s', group = '[S]earch' },
-        { '<leader>w', group = '[W]orkspace' },
+        { '<leader><Tab>', group = 'Workspace' },
         { '<leader>t', group = '[T]oggle' },
         { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
+        { '<leader>f', group = '[F]ile' },
+        { '<leader>w', proxy = '<C-w>', group = '[W]indow' },
+        { '<leader>o', group = '[O]pen' },
+        { '<leader>q', group = '[Q]uit/Session' },
+        { '<leader>b', group = '[B]uffers' },
+        { '<leader>g', group = '[G]it' },
+      },
+
+      win = {
+        -- don't allow the popup to overlap with the cursor
+        no_overlap = true,
+        -- width = 1,
+        -- height = { min = 4, max = 25 },
+        -- col = 0,
+        -- row = math.huge,
+        border = 'rounded',
+        padding = { 1, 2 }, -- extra window padding [top/bottom, right/left]
+        title = true,
+        title_pos = 'center',
+        zindex = 1000,
+        -- Additional vim.wo and vim.bo options
+        bo = {},
+        wo = {
+          -- winblend = 10, -- value between 0-100 0 for fully opaque and 100 for fully transparent
+        },
       },
     },
   },
@@ -408,8 +446,9 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
-      vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
-      vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+      vim.keymap.set('n', '<leader>fr', builtin.oldfiles, { desc = 'Recent Files' })
+      vim.keymap.set('n', '<leader>bf', builtin.buffers, { desc = 'Find existing buffers' })
+      vim.keymap.set('n', '<A-x>', builtin.commands, { desc = 'Find Command' })
 
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
@@ -430,9 +469,9 @@ require('lazy').setup({
       end, { desc = '[S]earch [/] in Open Files' })
 
       -- Shortcut for searching your Neovim configuration files
-      vim.keymap.set('n', '<leader>sn', function()
+      vim.keymap.set('n', '<leader>fP', function()
         builtin.find_files { cwd = vim.fn.stdpath 'config' }
-      end, { desc = '[S]earch [N]eovim files' })
+      end, { desc = 'Neovim files' })
     end,
   },
 
@@ -532,7 +571,7 @@ require('lazy').setup({
 
           -- Fuzzy find all the symbols in your current workspace.
           --  Similar to document symbols, except searches over your entire project.
-          map('<leader>ws', require('telescope.builtin').lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
+          map('<leader>cj', require('telescope.builtin').lsp_dynamic_workspace_symbols, 'Workspace Symbols')
 
           -- Rename the variable under your cursor.
           --  Most Language Servers support renaming across files, etc.
@@ -771,11 +810,17 @@ require('lazy').setup({
         -- chosen, you will need to read `:help ins-completion`
         --
         -- No, but seriously. Please read `:help ins-completion`, it is really good!
+
+        window = {
+          completion = cmp.config.window.bordered 'rounded',
+          documentation = cmp.config.window.bordered 'rounded',
+        },
+
         mapping = cmp.mapping.preset.insert {
           -- Select the [n]ext item
-          ['<C-n>'] = cmp.mapping.select_next_item(),
+          ['<C-j>'] = cmp.mapping.select_next_item(),
           -- Select the [p]revious item
-          ['<C-p>'] = cmp.mapping.select_prev_item(),
+          ['<C-k>'] = cmp.mapping.select_prev_item(),
 
           -- Scroll the documentation window [b]ack / [f]orward
           ['<C-b>'] = cmp.mapping.scroll_docs(-4),
@@ -784,7 +829,7 @@ require('lazy').setup({
           -- Accept ([y]es) the completion.
           --  This will auto-import if your LSP supports it.
           --  This will expand snippets if the LSP sent a snippet.
-          ['<C-y>'] = cmp.mapping.confirm { select = true },
+          ['<CR>'] = cmp.mapping.confirm { select = true },
 
           -- If you prefer more traditional completion keymaps,
           -- you can uncomment the following lines
@@ -845,12 +890,13 @@ require('lazy').setup({
       require('catppuccin').setup {
         color_overrides = {
           mocha = {
-            base = '#080808',
+            -- base = '#080808',
           },
         },
         transparent_background = true,
       }
     end,
+
     init = function()
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
@@ -860,6 +906,15 @@ require('lazy').setup({
       -- You can configure highlights by doing something like:
       vim.cmd.hi 'Comment gui=none'
     end,
+
+    -- create a function to toggle the base color and transparency
+    vim.keymap.set('n', '<leader>tt', function()
+      local cat = require 'catppuccin'
+      cat.options.transparent_background = not cat.options.transparent_background
+      -- cat.options.color_overrides.mocha.base = '#1e1e2e'
+      cat.compile()
+      vim.cmd.colorscheme(vim.g.colors_name)
+    end),
   },
 
   -- Highlight todo, notes, etc in comments
@@ -882,6 +937,9 @@ require('lazy').setup({
       -- - sd'   - [S]urround [D]elete [']quotes
       -- - sr)'  - [S]urround [R]eplace [)] [']
       require('mini.surround').setup()
+
+      require('mini.files').setup()
+      vim.keymap.set('n', '<leader>-', ':lua MiniFiles.open()<CR>', { noremap = true, silent = true, desc = 'Find file' })
 
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
@@ -953,7 +1011,7 @@ require('lazy').setup({
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
   require 'kickstart.plugins.debug',
-  require 'kickstart.plugins.indent_line',
+  -- require 'kickstart.plugins.indent_line',
   require 'kickstart.plugins.lint',
   require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.neo-tree',
@@ -988,6 +1046,7 @@ require('lazy').setup({
       task = '📌',
       lazy = '💤 ',
     },
+    border = 'rounded',
   },
 })
 
